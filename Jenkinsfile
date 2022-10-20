@@ -1,21 +1,27 @@
-pipeline{
-    tools { 
-        maven 'maven-3.8.1' 
-       
+pipeline {
+    agent any
+    tools{
+        maven 'maven-3.8.5'
     }
-    agent {
-        label 'master'
+    stages{
+        stage("Checkout the project") {
+           steps{
+               git branch: 'master', url: 'https://github.com/ranvivekjan/springboot-maven-nexus-deploy2.git'
+           } 
         }
-        stages{
-            stage('git stage'){
-                steps{
-                    git branch: 'main', url: 'https://github.com/cloudtechmasters/springboot-maven-course-micro-svc.git'
-                }
-            }
-            stage('build maven project '){
-                steps{
-                   sh 'mvn clean package'
-                }
+        stage("Build the package"){
+            steps {
+                sh 'mvn clean package'
             }
         }
+        stage("Sonar Quality Check"){
+		steps{
+		    script{
+		     withSonarQubeEnv(installationName: 'sonar-9', credentialsId: 'jenkins-sonar-token') {
+		     sh 'mvn sonar:sonar'
+	    	}
+		    }
+		}
+        }
+    }
 }
